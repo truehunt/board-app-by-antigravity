@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: board-app-deployment
+  labels:
+    app: board-app
+spec:
+  replicas: 2 # 2개의 파드(컨테이너) 복제본을 실행하여 고가용성 보장
+  selector:
+    matchLabels:
+      app: board-app
+  template:
+    metadata:
+      labels:
+        app: board-app
+    spec:
+      containers:
+      - name: board-app-container
+        # ⚠️ 중요: 사용할 이미지 이름 (DockerHub 등 레지스트리에 푸시된 이름)
+        image: hjpark88/board-app:v1.0.0
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: board-app-service
+spec:
+  # 외부에서 접근 가능하게 NodePort 사용 (또는 프록시 통신을 위한 ClusterIP)
+  type: NodePort 
+  selector:
+    app: board-app
+  ports:
+    - protocol: TCP
+      port: 80 # 쿠버네티스 서비스가 열어둘 포트
+      targetPort: 80 # Nginx 컨테이너 포트
+      nodePort: 30080 # 호스트(VM)에서 접근할 포트 범위 (30000-32767)
